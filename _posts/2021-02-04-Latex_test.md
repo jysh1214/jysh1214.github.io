@@ -4,12 +4,12 @@ title:  "如何在 jekyll 使用 latex 數學式"
 ---
 
 在 jekyll 專案目錄下 `_includes/header.html` 加入
-```bash
+```bash=
 <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
 ```
 
 但新的 jekyll 專案不會內建 `_includes/header.html`，所以先使用 `bundle show minima` (`minima` 為內建的風格)， 找到 `minima` 路徑:
-```bash
+```bash=
 /Library/Ruby/Gems/2.6.0/gems/minima-2.5.1
 ```
 
