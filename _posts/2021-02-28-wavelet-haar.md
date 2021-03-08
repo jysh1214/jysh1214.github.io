@@ -205,3 +205,4 @@ $$
 3. [opencv小练习：哈尔小波(Haar)](https://blog.csdn.net/u010006643/article/details/50493566)
 4. [小波变换完美通俗讲解](https://zhuanlan.zhihu.com/p/44215123)
 5. [基於哈爾小波轉換之可逆式資訊隱藏](http://140.127.82.166/retrieve/20968/102NPTT0394023-001.pdf)
+5. [Wavelets and Multiresolution Processing](https://uotechnology.edu.iq/ce/Lectures/Image_Processing_4th/DIP_Lecture8.pdf)
