@@ -15,16 +15,16 @@ cv::Mat cpu_im2col(cv::Mat& src, int k_rows, int k_cols, int padding, int stride
     cv::Mat dst(dst_rows * dst_cols, k_rows * k_cols, CV_32F);
 
     int current_row = 0;
-    for (int i = 0; i < src.rows; i += stride) {
-        for (int j = 0; j < src.cols; j+= stride) {
-            if (i + k_rows > src.rows || j + k_cols > src.cols)
+    for (int i = 0; i < padded.rows; i += stride) {
+        for (int j = 0; j < padded.cols; j+= stride) {
+            if (i + k_rows > padded.rows || j + k_cols > padded.cols)
                 continue;
 
             for (int r = 0; r < k_rows; r++) {
                 for (int c = 0; c < k_cols; c++) {
                     int src_row = i - (k_rows - 1) / 2 + r;
                     int src_col = j - (k_cols - 1) / 2 + c;
-                    dst.at<float>(current_row, r * k_cols + c) = src.at<float>(src_row, src_col);
+                    dst.at<float>(current_row, r * k_cols + c) = padded.at<float>(src_row, src_col);
                 }
             }
             current_row++;
@@ -44,9 +44,9 @@ int main()
         {12, 13, 14, 15}
     };
     src = cv::Mat(4, 4, CV_32F, src_data);
-    im2col_conv = cpu_im2col(src, 2, 2, 0, 1);
+    im2col_conv = cpu_im2col(src, 2, 2, 1, 1);
 
-    std::cout << im2col_conv << "\n";
+    // std::cout << im2col_conv << "\n";
 
     cv::Mat kernel;
     float kernel_data[2][2] = {
