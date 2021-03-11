@@ -36,7 +36,7 @@ wget https://github.com/tesseract-ocr/tessdata_best/raw/master/eng.traineddata
 
 放至(路徑可能不同)
 ```bash=
-usr/local/share/tessdata/
+/usr/local/share/tessdata
 ```
 
 ## 4. Create Training Data
