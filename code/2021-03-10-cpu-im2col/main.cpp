@@ -17,8 +17,8 @@ cv::Mat cpu_im2col(const cv::Mat& src, int k_rows, int k_cols, int padding, int 
     int k_rows_radius = k_rows / 2;
     int k_cols_radius = k_cols / 2;
     int current_row = 0;
-    for (int i = k_rows_radius; i < padded.rows - k_rows_radius; i += stride) {
-        for (int j = k_cols_radius; j < padded.cols - k_cols_radius; j+= stride) {
+    for (int i = k_rows_radius; i <= padded.rows - k_rows_radius; i += stride) {
+        for (int j = k_cols_radius; j <= padded.cols - k_cols_radius; j+= stride) {
 
             for (int r = 0; r < k_rows; r++) {
                 for (int c = 0; c < k_cols; c++) {
@@ -64,20 +64,25 @@ int main()
     };
     src = cv::Mat(4, 4, CV_32F, src_data);
     cv::Mat kernel, new_kernel;
-    float kernel_data[3][3] = {
-        {2, 2, 1},
-        {2, 2, 1},
-        {1, 1, 1}
+    // float kernel_data[3][3] = {
+    //     {2, 2, 1},
+    //     {2, 2, 1},
+    //     {1, 1, 1}
+    // };
+    // kernel = cv::Mat(3, 3, CV_32F, kernel_data);
+    float kernel_data[2][2] = {
+        {2, 1},
+        {2, 2}
     };
-    kernel = cv::Mat(3, 3, CV_32F, kernel_data);
+    kernel = cv::Mat(2, 2, CV_32F, kernel_data);
 
     cv::Mat conv_result = conv(src, kernel, 1, 1);
 
     std::cout << conv_result << "\n";
 
-    cv::Mat filter_conv;
-    cv::filter2D(src, filter_conv, -1, kernel, cv::Point(-1, -1), 0, cv::BORDER_CONSTANT);
-    std::cout << filter_conv << "\n";
+    // cv::Mat filter_conv;
+    // cv::filter2D(src, filter_conv, -1, kernel, cv::Point(-1, -1), 0, cv::BORDER_CONSTANT);
+    // std::cout << filter_conv << "\n";
 
 
     return 0;
