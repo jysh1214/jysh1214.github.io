@@ -16,13 +16,17 @@ cv::Mat cpu_im2col(const cv::Mat& src, int k_rows, int k_cols, int padding, int 
 
     int k_rows_radius = k_rows / 2;
     int k_cols_radius = k_cols / 2;
+
+    int i_limit = (k_rows % 2 == 0)? (padded.rows - k_rows_radius + 1): (padded.rows - k_rows_radius);
+    int j_limit = (k_cols % 2 == 0)? (padded.rows - k_cols_radius + 1): (padded.rows - k_cols_radius);
+
     int current_row = 0;
-    for (int i = k_rows_radius; i <= padded.rows - k_rows_radius; i += stride) {
-        for (int j = k_cols_radius; j <= padded.cols - k_cols_radius; j+= stride) {
+    for (int i = k_rows_radius; i < i_limit; i += stride) {
+        for (int j = k_cols_radius; j < j_limit; j+= stride) {
 
             for (int r = 0; r < k_rows; r++) {
                 for (int c = 0; c < k_cols; c++) {
-                    int src_row = i - k_rows_radius+ r;
+                    int src_row = i - k_rows_radius + r;
                     int src_col = j - k_cols_radius + c;
                     dst.at<float>(current_row, r * k_cols + c) = padded.at<float>(src_row, src_col);
                 }
@@ -42,7 +46,6 @@ cv::Mat conv(const cv::Mat& src, const cv::Mat& kernel, int padding, int stride)
     int k_cols = kernel.cols;
 
     cv::Mat reshape_src = cpu_im2col(src, k_rows, k_cols, padding, stride);
-    std::cout << reshape_src << "\n";
     cv::Mat reshape_ker = kernel.reshape(kernel.channels(), kernel.rows * kernel.cols).clone();
     cv::Mat empty, gemm_result;
     cv::gemm(reshape_src, reshape_ker, 1.0, empty, 0.0, gemm_result);
@@ -64,17 +67,17 @@ int main()
     };
     src = cv::Mat(4, 4, CV_32F, src_data);
     cv::Mat kernel, new_kernel;
-    // float kernel_data[3][3] = {
-    //     {2, 2, 1},
-    //     {2, 2, 1},
-    //     {1, 1, 1}
-    // };
-    // kernel = cv::Mat(3, 3, CV_32F, kernel_data);
-    float kernel_data[2][2] = {
-        {2, 1},
-        {2, 2}
+    float kernel_data[3][3] = {
+        {2, 2, 1},
+        {2, 2, 1},
+        {1, 1, 1}
     };
-    kernel = cv::Mat(2, 2, CV_32F, kernel_data);
+    kernel = cv::Mat(3, 3, CV_32F, kernel_data);
+    // float kernel_data[2][2] = {
+    //     {2, 1},
+    //     {2, 2}
+    // };
+    // kernel = cv::Mat(2, 2, CV_32F, kernel_data);
 
     cv::Mat conv_result = conv(src, kernel, 1, 1);
 
