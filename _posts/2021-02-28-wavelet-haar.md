@@ -17,11 +17,11 @@ title:  "Haar 小波轉換"
 
 其中，`L`代表低頻，`H`代表高頻。
 
-<center><img src="/assets/images/2021-02-28-wavelet-haar/one_level.svg" width="650"></center>
+<center><img src="../assets/images/2021-02-28-wavelet-haar/one_level.svg" width="650"></center>
 
 可以繼續分解為
 
-<center><img src="/assets/images/2021-02-28-wavelet-haar/two_level.svg" width="650"></center>
+<center><img src="../assets/images/2021-02-28-wavelet-haar/two_level.svg" width="650"></center>
 
 做`n`次分解就稱為`n`階(`level`)轉換。
 
@@ -146,29 +146,29 @@ $$
 
 int main() {
     cv::Mat img = cv::imread("test.jpg", 0);
-    int width = img.rows;
-    int height = img.cols;
+    int height = img.rows;
+    int width = img.cols;
 
     int level = 2;
     int decompose = 1;
-    cv::Mat tmp = cv::Mat::ones(width, height, CV_32FC1);
-    cv::Mat wav = cv::Mat::ones(width, height, CV_32FC1);
+    cv::Mat tmp = cv::Mat::ones(height, width, CV_32FC1);
+    cv::Mat wav = cv::Mat::ones(height, width, CV_32FC1);
     cv::Mat imgtmp = img.clone();
     imgtmp.convertTo(imgtmp, CV_32FC1);
     while (decompose <= level) {
-        width = img.rows / decompose;
-        height = img.cols / decompose;
+        height = img.rows / decompose;
+        width = img.cols / decompose;
 
-        for (int i = 0; i < width; i++){
-            for (int j = 0; j < height / 2; j++){
-                tmp.at<float>(i, j) = (imgtmp.at<float>(i, 2 * j) + imgtmp.at<float>(i, 2 * j + 1)) / 2;
-                tmp.at<float>(i, j + height / 2) = (imgtmp.at<float>(i, 2 * j) - imgtmp.at<float>(i, 2 * j + 1)) / 2;
+        for (int j = 0; j < height; j++){
+            for (int i = 0; i < width / 2; i++){
+                tmp.at<float>(j, i) = (imgtmp.at<float>(j, 2 * i) + imgtmp.at<float>(j, 2 * i + 1)) / 2;
+                tmp.at<float>(j, i + width / 2) = (imgtmp.at<float>(j, 2 * i) - imgtmp.at<float>(j, 2 * i + 1)) / 2;
             }
         }
-        for (int i = 0; i < width / 2; i++){
-            for (int j = 0; j < height; j++){
-                wav.at<float>(i, j) = (tmp.at<float>(2 * i, j) + tmp.at<float>(2 * i + 1, j)) / 2;
-                wav.at<float>(i + width / 2, j) = (tmp.at<float>(2 * i, j) - tmp.at<float>(2 * i + 1, j)) / 2;
+        for (int j = 0; j < height / 2; j++){
+            for (int i = 0; i < width; i++){
+                wav.at<float>(j, i) = (tmp.at<float>(2 * j, i) + tmp.at<float>(2 * j + 1, i)) / 2;
+                wav.at<float>(j + width / 2, i) = (tmp.at<float>(2 * j, i) - tmp.at<float>(2 * j + 1, i)) / 2;
             }
         }
         imgtmp = wav;
@@ -179,11 +179,11 @@ int main() {
     imwrite("output.png", wav);
     return 0;
 }
-
 ```
+
 ## Result:
 
-<img src="/assets/images/2021-02-28-wavelet-haar/output.png" width="1300">
+<img src="../assets/images/2021-02-28-wavelet-haar/output.png" width="1300">
 
 取右下角的`HH`區域，計算高頻每個`pixel`熵值。
 
@@ -194,7 +194,7 @@ $$
 
 其中，`w(x, y)`為 $$ 3 * 3 $$ `window`函數。
 
-<img src="/assets/images/2021-02-28-wavelet-haar/entropy.png" width="1300">
+<img src="../assets/images/2021-02-28-wavelet-haar/entropy.png" width="1300">
 
 
 
