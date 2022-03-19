@@ -1,6 +1,8 @@
 ---
 layout: post
+category: Computer Vision
 title:  "Haar 小波轉換"
+tag: 影像處理
 ---
 
 小波轉換，是一種時域轉頻域的數學工具，相較於傅立葉轉換基底為弦波，小波轉換的基底能量集中在有限時間。
@@ -17,11 +19,11 @@ title:  "Haar 小波轉換"
 
 其中，`L`代表低頻，`H`代表高頻。
 
-<center><img src="../assets/images/2021-02-28-wavelet-haar/one_level.svg" width="650"></center>
+<center><img src="/assets/images/2021-02-28-wavelet-haar/one_level.svg" width="650"></center>
 
 可以繼續分解為
 
-<center><img src="../assets/images/2021-02-28-wavelet-haar/two_level.svg" width="650"></center>
+<center><img src="/assets/images/2021-02-28-wavelet-haar/two_level.svg" width="650"></center>
 
 做`n`次分解就稱為`n`階(`level`)轉換。
 
@@ -183,7 +185,7 @@ int main() {
 
 ## Result:
 
-<img src="../assets/images/2021-02-28-wavelet-haar/output.png" width="1300">
+<img src="/assets/images/2021-02-28-wavelet-haar/output.png" width="1300">
 
 取右下角的`HH`區域，計算高頻每個`pixel`熵值。
 
@@ -194,15 +196,14 @@ $$
 
 其中，`w(x, y)`為 $$ 3 * 3 $$ `window`函數。
 
-<img src="../assets/images/2021-02-28-wavelet-haar/entropy.png" width="1300">
+<img src="/assets/images/2021-02-28-wavelet-haar/entropy.png" width="1300">
 
 
 
 ## References:
-
-1. [小波十講](https://www.books.com.tw/products/CN11408747)
-2. [圖片馬賽克的建置](http://www.cs.thu.edu.tw/upload_files/96_cttsai_01.pdf)
-3. [opencv小练习：哈尔小波(Haar)](https://blog.csdn.net/u010006643/article/details/50493566)
-4. [小波变换完美通俗讲解](https://zhuanlan.zhihu.com/p/44215123)
-5. [基於哈爾小波轉換之可逆式資訊隱藏](http://140.127.82.166/retrieve/20968/102NPTT0394023-001.pdf)
-5. [Wavelets and Multiresolution Processing](https://uotechnology.edu.iq/ce/Lectures/Image_Processing_4th/DIP_Lecture8.pdf)
+- [小波十講](https://www.books.com.tw/products/CN11408747)
+- [圖片馬賽克的建置](http://www.cs.thu.edu.tw/upload_files/96_cttsai_01.pdf)
+- [opencv小练习：哈尔小波(Haar)](https://blog.csdn.net/u010006643/article/details/50493566)
+- [小波变换完美通俗讲解](https://zhuanlan.zhihu.com/p/44215123)
+- [基於哈爾小波轉換之可逆式資訊隱藏](http://140.127.82.166/retrieve/20968/102NPTT0394023-001.pdf)
+- [Wavelets and Multiresolution Processing](https://uotechnology.edu.iq/ce/Lectures/Image_Processing_4th/DIP_Lecture8.pdf)
