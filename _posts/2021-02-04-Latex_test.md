@@ -1,6 +1,8 @@
 ---
 layout: post
 title:  "如何在 jekyll 使用 latex 數學式"
+author: Alex
+tags: [jekyll, latex]
 ---
 
 在 jekyll 專案目錄下 `_includes/header.html` 加入
