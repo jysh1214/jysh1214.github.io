@@ -67,7 +67,7 @@ a_sum = __riscv_vadd_mu(ov, a_sum, a_sum, 65536 - BASE, vl);
 
 ### Overflow Handling Mechanism for `b_sum` ###
 
-`b_sum` is a 32-bit accumulator, so we don't need to prevent overflow at each iteration. Instead, we handle overflow when `b_sum` is close to exceeding $$2^32-1$$.
+`b_sum` is a 32-bit accumulator, so we don't need to prevent overflow at each iteration. Instead, we handle overflow when `b_sum` is close to exceeding $$2^{32}-1$$.
 
 When `b_sum` >= 65535 * BASE, we have a risk to overflow. We have to prevent overflow when the inner loop is executed `b_overflow` times.
 
