@@ -54,7 +54,7 @@ uint32_t adler32(uint32_t adler, const uint8_t *buf, size_t len) {
 
 ## Adler32 in RISC-V Arch ##
 
-Assume that we process $$D_{x}$$ ~ $$D_{y}$$ for each iteration, where $x$ and $y$ both are the indexes of the input data bytes, and $$(y - x + 1) = vl$$.
+Assume that we process $$D_{x}$$ ~ $$D_{y}$$ for each iteration, where $$x$$ and $$y$$ both are the indexes of the input data bytes, and $$(y - x + 1) = vl$$.
 
 $$
 \begin{array}{l}
@@ -68,7 +68,7 @@ $$
 \end{array}
 $$
 
-$$A_{last}$$ is the $A$ value from the last iteration.
+$$A_{last}$$ is the $$A$$ value from the last iteration.
 
 However, modulo for each iteration is inefficient, we could move modulo operation to the last step. Such that,
 
