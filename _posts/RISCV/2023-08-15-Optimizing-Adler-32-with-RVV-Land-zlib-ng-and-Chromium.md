@@ -355,7 +355,7 @@ uint32_t adler32_rvv(uint32_t adler, const uint8_t *buf, size_t len) {
 Finally, we have to consider that doing modulo once at the last step may be a risk.
 If we handle a very long input data, we cannot ensure that an overflow won't occur for the 32-bit accumulator during computing.
 
-Assume we always progress $n$ elements from the last modulo, in the worst-case scenario, the current maximum value of `B` is $$255 * \frac{n(n + 1)}{2}$$, and `A` is $$n * (\text{BASE} - 1)$$. And don't forget that we still have value after doing the last modulo, the $$(\text{BASE} - 1)$$ would be the maximum value possibility.
+Assume we always progress $$n$$ elements from the last modulo, in the worst-case scenario, the current maximum value of `B` is $$255 * \frac{n(n + 1)}{2}$$, and `A` is $$n * (\text{BASE} - 1)$$. And don't forget that we still have value after doing the last modulo, the $$(\text{BASE} - 1)$$ would be the maximum value possibility.
 
 So, we could find the maximum $$n$$ that $$255n(n+1)/2 + (n+1)(\text{BASE}-1) <= 2^32-1 \Rightarrow n = 5552$$ (it's also defined at `zlib-ng` as `NMAX`), so we have to do modulo once for each block of `NMAX` size.
 
