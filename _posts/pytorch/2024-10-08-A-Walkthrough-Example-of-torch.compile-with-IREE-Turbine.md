@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "torch.compiler + iree-turbine"
+title:  "A Walkthrough Example of torch.compile with IREE-Turbine"
 date:   2024-10-08 16:00:00 +0800
 categories: [PyTorch]
 ---
@@ -8,7 +8,6 @@ categories: [PyTorch]
 In this post, we’ll show some demo code that you can easily reproduce with the following environment setup.
 
 **Environment**
-- MacBook Air M1
 - [Python 3.12.5](https://github.com/python/cpython/tree/v3.12.5)
 
 Required Python packages:
@@ -51,23 +50,74 @@ optimized_linear_module = torch.compile(linear_module)
 
 ## How does torch.compile work? ##
 
-![TorchCompile](https://github.com/jysh1214/jysh1214.github.io/blob/master/_assets/2024-10-08-torch.compile+iree-turbine/pytorch-2.0-img12.png?raw=true)
+![TorchCompile](https://github.com/jysh1214/jysh1214.github.io/blob/master/_assets/2024-10-08-A-Walkthrough-Example-of-torch.compile-with-IREE-Turbine/pytorch-2.0-img12.png?raw=true)
 
-### Dynamo ###
+### TorchDynamo ###
 
-`TorchDynamo` use the Frame Evaluation API ([PEP-0523](https://peps.python.org/pep-0523/)) to capture the bytecode before PVM execute them. `TorchDynamo` extracts FX graphs by analyzing the bytecode during runtime and detecting calls to PyTorch operations.
+`TorchDynamo` is responsible for JIT compiling arbitrary Python code into FX graphs, which can then be further optimized.
 
-![TorchDynamo](https://github.com/jysh1214/jysh1214.github.io/blob/master/_assets/2024-10-08-torch.compile+iree-turbine/torch-dynamo.png?raw=true)
+`TorchDynamo` will capture the bytecode before PVM execute them using Frame Evaluation API ([PEP-0523](https://peps.python.org/pep-0523/)) and then extracts FX graphs by analyzing the bytecode during runtime and detecting calls to PyTorch operations.
+
+![TorchDynamo](https://github.com/jysh1214/jysh1214.github.io/blob/master/_assets/2024-10-08-A-Walkthrough-Example-of-torch.compile-with-IREE-Turbine/torch-dynamo.png?raw=true)
+
+### FX ###
+
+FX is a toolkit for developers to use to transform `torch.nn.Module` instances. FX consists of three main components: a symbolic tracer, an intermediate representation, and Python code generation.
+
+```python
+import torch
+
+class LinearModule(torch.nn.Module):
+  def __init__(self, in_features, out_features):
+    super().__init__()
+    self.weight = torch.nn.Parameter(torch.randn(in_features, out_features))
+    self.bias = torch.nn.Parameter(torch.randn(out_features))
+
+  def forward(self, input):
+    return (input @ self.weight) + self.bias
+
+linear_module = LinearModule(4, 3)
+
+from torch.fx import symbolic_trace
+# Symbolic tracing frontend - captures the semantics of the module
+symbolic_traced : torch.fx.GraphModule = symbolic_trace(module)
+
+# FX Graph IR - Graph representation
+print(symbolic_traced.graph)
+
+# Code generation - valid Python code matching the graph
+print(symbolic_traced.code)
+```
+
+The FX graph IR (`torch.fx.Graph`):
+```txt
+graph():
+    %input_1 : [num_users=1] = placeholder[target=input]
+    %weight : [num_users=1] = get_attr[target=weight]
+    %matmul : [num_users=1] = call_function[target=operator.matmul](args = (%input_1, %weight), kwargs = {})
+    %bias : [num_users=1] = get_attr[target=bias]
+    %add : [num_users=1] = call_function[target=operator.add](args = (%matmul, %bias), kwargs = {})
+    return add
+```
+
+The Python code:
+```python
+def forward(self, input):
+    input_1 = input
+    weight = self.weight
+    matmul = input_1 @ weight;  input_1 = weight = None
+    bias = self.bias
+    add = matmul + bias;  matmul = bias = None
+    return add
+```
 
 ### AOTAutograd ###
 
-`AOTAutograd` will generate backward computation graph from forward computation graph, it's important for training.
+`AOTAutograd` will generate backward computation graph from forward computation graph.
 
-### Guards ###
+---
 
-TODO
-
-### A Walkthrough of Sample ###
+### A Walkthrough of the Example ###
 
 In this section, we will use the following as an example and focus on how `torch.compile` optimize inference processing and how it works with `torch.nn.Module`.
 
@@ -94,12 +144,7 @@ turbine_output = opt_linear_module(args)
 print(turbine_output)
 ```
 
-`torch.compile` is a JIT compiler. When we run the `torch.compile` command, we only register a hook function to convert the frame and backend functions for optimization.
-```python
-opt_linear_module = torch.compile(linear_module, backend="turbine_cpu")
-```
-
-The backend function will be `shark_turbine/dynamo/backends/cpu.py`:
+The backend function will be `shark_turbine/dynamo/backends/cpu.py(45)_base_backend()`:
 ```python
 def _base_backend(gm: torch.fx.GraphModule, example_inputs):
     # Set up the session, context and invocation.
@@ -154,17 +199,11 @@ def _base_backend(gm: torch.fx.GraphModule, example_inputs):
     output.close()
 
     return SpecializedExecutable(vmfb_module, device_state)
-
-
-backend = aot_autograd(fw_compiler=_base_backend)
 ```
 
-When we perform inference, the bytecode is captured before the PVM executes it, and then it is converted into an FX graph.
-```python
-turbine_output = opt_linear_module(args)
-```
+`TorchDynamo` will dynamically analyze the bytecode, transform it into an FX graph by generating corresponding FX nodes based on the bytecode instructions.
 
-The captured bytecode:
+The captured bytecode from `linear_module.forward()`:
 ```txt
  11           0 RESUME                   0
  12           2 LOAD_FAST                1 (input)
@@ -177,9 +216,39 @@ The captured bytecode:
              56 RETURN_VALUE
 ```
 
-`TorchDynamo` will dynamically analyze the bytecode, transform it into an FX graph, and generate corresponding FX nodes based on the bytecode instructions.
+> *NOTE*
+> To dump the bytecode, you can use the `dis` module:
+> ```python
+> import dis
+> 
+> dis.dis(linear_module.forward)
+> ```
 
-`AOTAutograd` will generate a backward graph for training. Let's focus on the forward function.
+The generated FX graph (`torch.fx.Graph`) will be used to create a new FX GraphModule (`torch.fx.GraphModule`).
+We can use `graph()` method to dump the FX graph IR of the GraphModule.
+```txt
+graph():
+    %primals_1 : [num_users=1] = placeholder[target=primals_1]
+    %primals_2 : [num_users=1] = placeholder[target=primals_2]
+    %primals_3 : [num_users=1] = placeholder[target=primals_3]
+    %unsqueeze : [num_users=2] = call_function[target=torch.ops.aten.unsqueeze.default](args = (%primals_3, 0), kwargs = {})
+    %mm : [num_users=1] = call_function[target=torch.ops.aten.mm.default](args = (%unsqueeze, %primals_1), kwargs = {})
+    %squeeze : [num_users=1] = call_function[target=torch.ops.aten.squeeze.dim](args = (%mm, 0), kwargs = {})
+    %add : [num_users=1] = call_function[target=torch.ops.aten.add.Tensor](args = (%squeeze, %primals_2), kwargs = {})
+    return [add, unsqueeze]
+```
+
+The new FX GraphModule will use `recompile()` method to generate valid Python code matching the graph. 
+```python
+def forward(self, primals_1: "f32[4, 3][3, 1]cpu", primals_2: "f32[3][1]cpu", primals_3: "f32[4][1]cpu"):
+    unsqueeze: "f32[1, 4][4, 1]cpu" = torch.ops.aten.unsqueeze.default(primals_3, 0);  primals_3 = None
+    mm: "f32[1, 3][3, 1]cpu" = torch.ops.aten.mm.default(unsqueeze, primals_1);  primals_1 = None
+    squeeze: "f32[3][1]cpu" = torch.ops.aten.squeeze.dim(mm, 0);  mm = None
+    add: "f32[3][1]cpu" = torch.ops.aten.add.Tensor(squeeze, primals_2);  squeeze = primals_2 = None
+    return [add, unsqueeze]
+```
+
+`AOTAutograd` will generate backward computation graph from forward graph. In this post, we will focus on the forward function.
 ```python
 def forward(self, primals_1: "f32[4, 3][3, 1]cpu", primals_2: "f32[3][1]cpu", primals_3: "f32[4][1]cpu"):
     unsqueeze: "f32[1, 4][4, 1]cpu" = torch.ops.aten.unsqueeze.default(primals_3, 0);  primals_3 = None
@@ -195,13 +264,22 @@ def backward(self, unsqueeze: "f32[1, 4][4, 1]cpu", tangents_1: "f32[3][1]cpu"):
     return [mm_1, tangents_1, None]
 ```
 
-The final FX graph `gm` will look like this:​
-
-`gm.print_readable()`:
+The `torch.fx.GraphModule` of the `forward` function will be passed to the `iree-turbine` backend function.
+We can use `print_readable()` method to show the Python code matching the graph in the backend function:
 ```python
+# gm.print_readable(include_stride=True, include_device=True)
+class GraphModule(torch.nn.Module):
+    def forward(self, primals_1: "f32[4, 3][3, 1]cpu", primals_2: "f32[3][1]cpu", primals_3: "f32[4][1]cpu"):
+        unsqueeze: "f32[1, 4][4, 1]cpu" = torch.ops.aten.unsqueeze.default(primals_3, 0);  primals_3 = None
+        mm: "f32[1, 3][3, 1]cpu" = torch.ops.aten.mm.default(unsqueeze, primals_1);  primals_1 = None
+        squeeze: "f32[3][1]cpu" = torch.ops.aten.squeeze.dim(mm, 0);  mm = None
+        add: "f32[3][1]cpu" = torch.ops.aten.add.Tensor(squeeze, primals_2);  squeeze = primals_2 = None
+        return [add, unsqueeze]
+
+# Remove stride and device to make the code clearer
+# gm.print_readable()
 class GraphModule(torch.nn.Module):
     def forward(self, primals_1: "f32[4, 3]", primals_2: "f32[3]", primals_3: "f32[4]"):
-        # File: /Users/alex/tmp/turbine_cpu.py:12 in forward, code: return (input @ self.weight) + self.bias
         unsqueeze: "f32[1, 4]" = torch.ops.aten.unsqueeze.default(primals_3, 0);  primals_3 = None
         mm: "f32[1, 3]" = torch.ops.aten.mm.default(unsqueeze, primals_1);  primals_1 = None
         squeeze: "f32[3]" = torch.ops.aten.squeeze.dim(mm, 0);  mm = None
@@ -209,26 +287,14 @@ class GraphModule(torch.nn.Module):
         return [add, unsqueeze]
 ```
 
-`gm.graph.print_tabular()`:
-```txt
-opcode         name       target                  args                    kwargs
--------------  ---------  ----------------------  ----------------------  --------
-placeholder    primals_1  primals_1               ()                      {}
-placeholder    primals_2  primals_2               ()                      {}
-placeholder    primals_3  primals_3               ()                      {}
-call_function  unsqueeze  aten.unsqueeze.default  (primals_3, 0)          {}
-call_function  mm         aten.mm.default         (unsqueeze, primals_1)  {}
-call_function  squeeze    aten.squeeze.dim        (mm, 0)                 {}
-call_function  add        aten.add.Tensor         (squeeze, primals_2)    {}
-output         output     output                  ([add, unsqueeze],)     {}
-```
+---
 
-The FX graph will eventually be passed to the `iree-turbine` backend function.
+#### IREE-Turbine Backend ####
 
-`iree` is a MLIR-based compiler and it cannot handle FX graph directly.
-In the backend function, we use `torch-mlir` FX Importer to convert the FX graph into the Torch MLIR dialect.
+`iree` is a MLIR-based compiler and it cannot handle FX GraphModule directly.
+In the backend function, we use `torch-mlir` FX Importer to convert the FX GraphModule into the Torch MLIR dialect.
 
-![What is Torch-MLIR?](https://github.com/jysh1214/jysh1214.github.io/blob/master/_assets/2024-10-08-torch.compile+iree-turbine/torch-mlir.png?raw=true)
+![What is Torch-MLIR?](https://github.com/jysh1214/jysh1214.github.io/blob/master/_assets/2024-10-08-A-Walkthrough-Example-of-torch.compile-with-IREE-Turbine/torch-mlir.png?raw=true)
 
 `torch-mlir/python/torch_mlir/extras/fx_importer.py`:
 ```python
@@ -253,7 +319,7 @@ class FxImporter:
     # ...
 ```
 
-The MLIR converted from the FX graph is:
+The MLIR converted from the FX GraphModule is:
 ```mlir
 module {
   func.func @main(%arg0: !torch.vtensor<[4,3],f32>, %arg1: !torch.vtensor<[3],f32>, %arg2: !torch.vtensor<[4],f32>) -> (!torch.vtensor<[3],f32>, !torch.vtensor<[1,4],f32>) {
@@ -269,14 +335,13 @@ module {
 }
 ```
 
-`iree` compiler runs the lowering pass:
+After applying the lowering pass using the `iree` compiler with the following code:
 ```python
-    with context:
-        pm = PassManager.parse("builtin.module(torch-to-iree)")
-        pm.run(module.operation)
+pm = PassManager.parse("builtin.module(torch-to-iree)")
+pm.run(module.operation)
 ```
 
-The MLIR after the `iree` compiler lowering pass will be:
+The MLIR will be:
 ```mlir
 #map = affine_map<(d0) -> (d0)>
 module {
@@ -314,22 +379,59 @@ module {
 }
 ```
 
-You may have noticed the `print(module, file=sys.stderr)` code inside the `iree-turbine` backend function. It will print the same result as shown above.
+> *NOTE*
+> To reproduce the result above, you can use the `iree-opt` tool with the following command:
+> ```bash
+> iree-opt --pass-pipeline="builtin.module(torch-to-iree)" <your_mlir>
+> ```
 
-The `iree` compiler will compile the MLIR into the VMFB (VM Frame Buffer) format, which can be executed by the `iree` runtime.
+The `iree` compiler will compile the MLIR into the VMFB (VM Frame Buffer) format, which can be executed by the `iree` runtime. The related code is:
 ```python
-    # IREE compilation phase.
-    inv.execute()
+# IREE compilation phase.
+inv.execute()
 
-    # Output phase.
-    output = Output.open_membuffer()
-    inv.output_vm_bytecode(output)
+# Output phase.
+output = Output.open_membuffer()
+inv.output_vm_bytecode(output)
+```
+
+Finally, we will pass the args to the `iree` runtime and invoke it.
+```python
+class SpecializedExecutable:
+    """A concrete executable that has been specialized in some way."""
+    #...
+
+    def __call__(self, *inputs):
+        arg_list = VmVariantList(len(inputs))
+        ret_list = VmVariantList(
+            1
+        )  # TODO: Get the number of results from the descriptor.
+
+        # Move inputs to the device and add to arguments.
+        self._inputs_to_device(inputs, arg_list)
+        # TODO: Append semaphores for async execution.
+
+        # Invoke.
+        self.vm_context.invoke(self.entry_function, arg_list, ret_list)
+        return self._returns_to_user(ret_list)
 ```
 
 The answer will look like this:
 ```python
 tensor([ 1.1014,  0.9572, -0.8066], grad_fn=<CompiledFunctionBackward>)
 ```
+
+We can summarize the basic data flow for each phase of the process, from Python code to MLIR.
+![TorchCompileDataFlow](https://github.com/jysh1214/jysh1214.github.io/blob/master/_assets/2024-10-08-A-Walkthrough-Example-of-torch.compile-with-IREE-Turbine/torch-compile-data-flow.png?raw=true)
+
+
+## Summary ##
+
+In this blog, we dive into how to use `torch.compile` with the `IREE-Turbine` backend to optimize and execute PyTorch models. The blog provides a step-by-step guide that walks you through the entire data flow, from Python source code to MLIR.
+
+Although `torch.compile` is simple to use, it feels like a black box, making it difficult to understand what happens during the optimization process.
+
+In future blogs, I plan to delve deeper into `TorchDynamo` and `FX`, offering more detailed explanations and introducing methods for probing and debugging to help understand these processes.
 
 
 ## See Also ##
@@ -341,4 +443,4 @@ tensor([ 1.1014,  0.9572, -0.8066], grad_fn=<CompiledFunctionBackward>)
 ## References ##
 
 - [Introduction to torch.compile](https://pytorch.org/tutorials/intermediate/torch_compile_tutorial.html#torchdynamo-and-fx-graphs)
-
+- [torch.fx](https://pytorch.org/docs/stable/fx.html)
