@@ -1,2 +1,4 @@
 bundle exec jekyll serve
+
+draw:
 https://excalidraw.com

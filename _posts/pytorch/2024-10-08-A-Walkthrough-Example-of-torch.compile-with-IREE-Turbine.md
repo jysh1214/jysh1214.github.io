@@ -3,6 +3,7 @@ layout: post
 title:  "A Walkthrough Example of torch.compile with IREE-Turbine"
 date:   2024-10-08 16:00:00 +0800
 categories: [PyTorch]
+author: Alex Chiang
 ---
 
 In this post, we’ll show some demo code that you can easily reproduce with the following environment setup.
