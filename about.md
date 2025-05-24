@@ -4,4 +4,5 @@ title: About
 permalink: /about/
 ---
 
-My [LinkedIn](https://www.linkedin.com/in/jyx1118/).
+Hi, I'm Alex. I work at SiFive as a software engineer.
+Here is my [LinkedIn](https://www.linkedin.com/in/jyx1118/).
