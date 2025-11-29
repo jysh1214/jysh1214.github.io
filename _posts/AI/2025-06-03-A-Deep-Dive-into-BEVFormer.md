@@ -2,7 +2,7 @@
 layout: post
 title:  "A Deep Dive into BEVFormer"
 date:   2025-06-03
-categories: [Self Driving]
+categories: [AI]
 author: Alex Chiang
 ---
 
