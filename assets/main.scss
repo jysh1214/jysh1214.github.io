@@ -1,0 +1,21 @@
+---
+---
+
+@import "minima";
+
+/* Custom CSS to reduce side margins */
+.wrapper {
+  max-width: -webkit-calc(1000px - (30px));
+  max-width:         calc(1000px - (30px));
+  padding-right: 15px;
+  padding-left: 15px;
+}
+
+@media screen and (min-width: 800px) {
+  .wrapper {
+    max-width: -webkit-calc(1000px - (30px * 2));
+    max-width:         calc(1000px - (30px * 2));
+    padding-right: 30px;
+    padding-left: 30px;
+  }
+}
