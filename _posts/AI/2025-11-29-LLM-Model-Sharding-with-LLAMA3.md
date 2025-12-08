@@ -1,4 +1,4 @@
----
+<!-- ---
 layout: post
 title:  "LLM Model Sharding with LLAMA3"
 date:   2025-11-29
@@ -397,4 +397,4 @@ We can assign each block to a different device, as shown in the following diagra
 
 - [LLAMA3](https://huggingface.co/meta-llama/Meta-Llama-3-8B)
 - [Model Parallelism](https://huggingface.co/transformers/v4.10.1/parallelism.html)
-- [shark ai](https://github.com/nod-ai/amd-shark-ai)
+- [shark ai](https://github.com/nod-ai/amd-shark-ai) -->
