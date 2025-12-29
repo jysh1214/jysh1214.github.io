@@ -19,4 +19,4 @@ Familiar with modern LLM inference frameworks, including vLLM and llama.cpp, wit
 Hands-on experience with distributed computing and multi-device LLM execution, including model sharding via Tensor Parallelism (TP).
 
 
-You can find my LinkedIn profile here: https://www.linkedin.com/in/jyx1118/
+You can find my LinkedIn profile here: [https://www.linkedin.com/in/jyx1118/](https://www.linkedin.com/in/jyx1118/)
