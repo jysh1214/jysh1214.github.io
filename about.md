@@ -4,7 +4,7 @@ title: About
 permalink: /about/
 ---
 
-Hi, I'm Alex - an AI/ML Software Engineer with end-to-end, full-stack experience in porting, optimizing, and deploying AI/ML models on RISC-V platforms, spanning the full pipeline from frontend model ingestion (PyTorch/ONNX) through compiler lowering (MLIR/IREE), runtime and driver integration, and on-device execution.
+Hi, I'm Alex - an AI/ML Software Engineer with end-to-end, full-stack experience in porting, optimizing, and deploying AI/ML models on RISC-V platforms, spanning the full pipeline from frontend models (PyTorch/ONNX) through MLIR-based compiler lowering and code generation, runtime and driver integration, and deployment on RISC-V hardware.
 
 Hands-on experience porting, validating, and optimizing diverse AI workloads on RISC-V platforms, including BEVFormer for automotive, LLAMA3 for large language models, and other transformer-based architectures.
 
