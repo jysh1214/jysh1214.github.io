@@ -6,11 +6,11 @@ permalink: /about/
 
 Hi, I'm Alex - an AI/ML Software Engineer with end-to-end, full-stack experience in porting, optimizing, and deploying AI/ML models on RISC-V platforms, spanning the full pipeline from frontend models (PyTorch/ONNX) through MLIR-based compiler lowering and code generation, runtime and driver integration, and deployment on RISC-V hardware.
 
-Hands-on experience porting, validating, and optimizing diverse AI workloads on RISC-V platforms, including BEVFormer for automotive, LLAMA3 for large language models, and other transformer-based architectures.
+Hands-on experience in porting, validating, and optimizing diverse AI workloads on RISC-V platforms, especially for LLMs.
 
-Experienced with mainstream AI frameworks such as PyTorch and ONNX, including custom operator registration and integration, as well as replacing CUDA/C++ kernels with RISC-V implementations via Python bindings.
+Experienced with mainstream AI frameworks such as PyTorch and ONNX, including custom operator registration and integration, as well as replacing CUDA/C++ kernels with RISC-V implementations.
 
-Strong background in the MLIR ecosystem, including Torch-MLIR for lowering PyTorch models into MLIR, and IREE as an MLIR-based AI compiler and runtime, with experience in RISC-V and GPU code generation, custom kernel development, and implementing custom IREE runtime drivers for SiFive accelerators.
+Strong background in the MLIR ecosystem, including Torch-MLIR for lowering PyTorch models into MLIR, and IREE as an MLIR-based AI compiler and runtime, with experience in RISC-V and GPU code generation, custom kernel development, and integration of custom runtimes for SiFive accelerators.
 
 Solid understanding of PyTorch JIT compilation, including TorchDynamo mechanisms, graph capture, and supporting torch.compile with a RISC-V backend.
 
